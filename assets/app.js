@@ -10,6 +10,22 @@
   var FORM_ENDPOINT = "";
 
   document.documentElement.classList.add("js");
+  var ES = (document.documentElement.lang || "").indexOf("es") === 0;
+  var L = ES ? {
+    copied: "Copiado ", border: " de borde", want: function (p, c, b) { return "Me interesa una entrada en " + p + ", " + c + (b ? ", con borde " + b : "") + "."; },
+    errName: "Escriba su nombre para saber por quién preguntar.", errPhone: "Escriba un teléfono para programar la visita.",
+    sending: "Enviando…", received: "Solicitud recibida", in_: " en ", submit: "Solicitar mi presupuesto gratis",
+    sent: "Recibimos su solicitud y lo llamaremos para programar la visita.", callUs: "Llámenos para confirmar su visita de presupuesto:",
+    fail: "No se pudo enviar. Llame al 781.299.2751 o intente de nuevo.", subject: "Nueva solicitud de presupuesto: ",
+    names: { herringbone: "Espiga 45°", running: "Hilera corrida", basket: "Canasta", cobble: "Adoquín rústico", charcoal: "Mezcla carbón", granite: "Gris granito", tan: "Mezcla canela", brick: "Rojo ladrillo" }
+  } : {
+    copied: "Copied ", border: " border", want: function (p, c, b) { return "Interested in a " + p + " driveway, " + c + (b ? ", with a " + b + " border course" : "") + "."; },
+    errName: "Add your name so we know who to ask for.", errPhone: "Add a phone number so we can schedule the visit.",
+    sending: "Sending…", received: "Request received", in_: " in ", submit: "Request my free estimate",
+    sent: "We have your request and will call you to schedule the visit.", callUs: "Call us to lock in your estimate visit:",
+    fail: "That didn't go through. Please call 781.299.2751 or try again.", subject: "New estimate request: ",
+    names: { herringbone: "Herringbone 45°", running: "Running bond", basket: "Basketweave", cobble: "Cobblestone", charcoal: "Charcoal blend", granite: "Granite grey", tan: "Tan blend", brick: "Brick red" }
+  };
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
@@ -29,7 +45,7 @@
   $$("[data-copy]").forEach(function (b) {
     b.addEventListener("click", function () {
       var v = b.getAttribute("data-copy");
-      try { navigator.clipboard.writeText(v).then(function () { toast("Copied " + v); }, function () { toast(v); }); } catch (e) { toast(v); }
+      try { navigator.clipboard.writeText(v).then(function () { toast(L.copied + v); }, function () { toast(v); }); } catch (e) { toast(v); }
     });
   });
 
@@ -78,7 +94,7 @@
       for (var z = 0; z < rough; z++) { ctx.fillStyle = rgb(c, .6 + R() * .7); var s2 = 1 + R() * 2.5; ctx.fillRect(x + R() * (w - s2), y + R() * (h - s2), s2, s2); } }
   }
   var PAVERS = { charcoal: ["#3b3d3f", "#45474a", "#2f3133", "#50524f", "#3a3936"], granite: ["#8a8c8a", "#7b7e7c", "#999b97", "#6f7270", "#a3a39d"], tan: ["#b59a74", "#a6896a", "#c4ab83", "#8f7457", "#bca17a"], brick: ["#8e4434", "#7d3a2d", "#9c5040", "#6f3328", "#a35a45"] };
-  var NAMES = { herringbone: "Herringbone 45°", running: "Running bond", basket: "Basketweave", cobble: "Cobblestone", charcoal: "Charcoal blend", granite: "Granite grey", tan: "Tan blend", brick: "Brick red" };
+  var NAMES = L.names;
   var BORDER = { charcoal: "granite", granite: "charcoal", tan: "brick", brick: "charcoal" };
   function paverField(ctx, x, y, w, h, type, col, u, seed, rot) {
     var R = rng(seed); ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
@@ -110,12 +126,12 @@
     c.fillStyle = "rgba(0,0,0,.35)"; c.fillRect(g - 3, 0, 3, h); c.fillRect(w - g, 0, 3, h);
     shrub(c, g * .45, h * .22, g * .3, 95); shrub(c, g * .5, h * .72, g * .26, 96); shrub(c, w - g * .5, h * .45, g * .32, 97);
     var vg = c.createRadialGradient(w * .45, h * .35, Math.min(w, h) * .2, w / 2, h / 2, Math.max(w, h) * .75); vg.addColorStop(0, "rgba(255,240,210,.06)"); vg.addColorStop(1, "rgba(0,0,0,.35)"); c.fillStyle = vg; c.fillRect(0, 0, w, h);
-    $("#dzLabel").textContent = NAMES[d.p] + " · " + NAMES[d.c] + (d.b ? " · " + NAMES[BORDER[d.c]] + " border" : "");
+    $("#dzLabel").textContent = NAMES[d.p] + " · " + NAMES[d.c] + (d.b ? " · " + NAMES[BORDER[d.c]] + L.border : "");
   }
   if ($("#dzCanvas")) {
     $$("input[name=pat],input[name=col],#dzBorder").forEach(function (el) { el.addEventListener("change", drawDesigner); });
     $("#dzQuote").addEventListener("click", function () {
-      var d = design(), msg = "Interested in a " + NAMES[d.p] + " driveway, " + NAMES[d.c] + (d.b ? ", with a " + NAMES[BORDER[d.c]] + " border course" : "") + ".";
+      var d = design(), msg = L.want(NAMES[d.p], NAMES[d.c], d.b ? NAMES[BORDER[d.c]] : "");
       try { sessionStorage.setItem("ar-design", msg); } catch (e) {}
       location.href = "contact.html#estimate";
     });
@@ -126,25 +142,25 @@
   /* ---- Estimate form ---- */
   var form = $("#estForm");
   if (form) {
-    try { var saved = sessionStorage.getItem("ar-design"); if (saved) { $("#f-notes").value = saved; $("#f-svc").value = "Driveway or walkway paving"; sessionStorage.removeItem("ar-design"); } } catch (e) {}
+    try { var saved = sessionStorage.getItem("ar-design"); if (saved) { $("#f-notes").value = saved; $("#f-svc").selectedIndex = 0; sessionStorage.removeItem("ar-design"); } } catch (e) {}
     var q = new URLSearchParams(location.search).get("service"); if (q) { $$("#f-svc option").forEach(function (o) { if (o.value === q) $("#f-svc").value = q; }); }
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var n = $("#f-name").value.trim(), p = $("#f-phone").value.trim(), err = $("#f-err");
-      if (!n || !p) { err.textContent = !n ? "Add your name so we know who to ask for." : "Add a phone number so we can schedule the visit."; err.hidden = false; (n ? $("#f-phone") : $("#f-name")).focus(); return; }
+      if (!n || !p) { err.textContent = !n ? L.errName : L.errPhone; err.hidden = false; (n ? $("#f-phone") : $("#f-name")).focus(); return; }
       if ($("#f-hp").value) return;
       err.hidden = true;
-      var btn = $("button[type=submit]", form); btn.disabled = true; btn.textContent = "Sending…";
-      var data = { name: n, phone: p, email: $("#f-email").value.trim(), town: $("#f-town").value.trim(), service: $("#f-svc").value, details: $("#f-notes").value.trim(), _subject: "New estimate request: " + $("#f-svc").value };
+      var btn = $("button[type=submit]", form); btn.disabled = true; btn.textContent = L.sending;
+      var data = { name: n, phone: p, email: $("#f-email").value.trim(), town: $("#f-town").value.trim(), service: $("#f-svc").value, details: $("#f-notes").value.trim(), _subject: L.subject + $("#f-svc").value };
       function done(sent) {
-        $("#f-sum").textContent = n + ", " + data.service.toLowerCase() + (data.town ? " in " + data.town : "") + ".";
-        $("#f-msg").textContent = sent ? "We have your request and will call you to schedule the visit." : "Call us to lock in your estimate visit:";
-        $("#f-done").hidden = false; btn.textContent = "Request received"; $("#f-done").scrollIntoView({ behavior: "smooth", block: "center" });
+        $("#f-sum").textContent = n + ", " + data.service.toLowerCase() + (data.town ? L.in_ + data.town : "") + ".";
+        $("#f-msg").textContent = sent ? L.sent : L.callUs;
+        $("#f-done").hidden = false; btn.textContent = L.received; $("#f-done").scrollIntoView({ behavior: "smooth", block: "center" });
       }
       if (!FORM_ENDPOINT) { done(false); return; }
       fetch(FORM_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(data) })
         .then(function (r) { if (!r.ok) throw 0; done(true); })
-        .catch(function () { btn.disabled = false; btn.textContent = "Request my free estimate"; err.textContent = "That didn't go through. Please call 781.299.2751 or try again."; err.hidden = false; });
+        .catch(function () { btn.disabled = false; btn.textContent = L.submit; err.textContent = L.fail; err.hidden = false; });
     });
   }
 })();
