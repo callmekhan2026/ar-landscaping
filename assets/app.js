@@ -49,13 +49,65 @@
     });
   });
 
-  /* Reveal on scroll */
+  /* ---- Motion ---- */
+  var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var hasIO = "IntersectionObserver" in window;
+
+  /* Hero headline: words rise in one after another */
+  var h1 = $(".hero h1");
+  if (h1 && !reduce) {
+    var wi = 0;
+    (function walk(node) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+        if (n.nodeType === 3) {
+          var frag = document.createDocumentFragment();
+          n.textContent.split(/(\s+)/).forEach(function (p) {
+            if (!p) return;
+            if (/^\s+$/.test(p)) { frag.appendChild(document.createTextNode(p)); return; }
+            var s = document.createElement("span"); s.className = "w"; s.style.setProperty("--d", (wi++ * 70) + "ms"); s.textContent = p; frag.appendChild(s);
+          });
+          node.replaceChild(frag, n);
+        } else if (n.nodeType === 1) { walk(n); }
+      });
+    })(h1);
+    h1.classList.add("split");
+  }
+
+  /* Reveal on scroll, staggered within each group */
+  $$(".gal figure").forEach(function (f) { f.classList.add("reveal"); });
   var rev = $$(".reveal");
-  if ("IntersectionObserver" in window) {
+  rev.forEach(function (el) { var p = el.parentNode; p._n = p._n || 0; el.style.transitionDelay = Math.min(p._n, 5) * 90 + "ms"; p._n++; });
+  if (hasIO && !reduce) {
     var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }); }, { rootMargin: "0px 0px -8% 0px" });
     rev.forEach(function (el) { io.observe(el); });
+  } else { rev.forEach(function (el) { el.classList.add("in"); }); }
+
+  /* Counters */
+  var counters = $$("[data-count]");
+  function countUp(el) {
+    var to = +el.getAttribute("data-count"), t0 = null;
+    function step(ts) { if (!t0) t0 = ts; var p = Math.min(1, (ts - t0) / 1400), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * e); if (p < 1) requestAnimationFrame(step); }
+    requestAnimationFrame(step);
   }
-  setTimeout(function () { rev.forEach(function (el) { el.classList.add("in"); }); }, 2500);
+  if (hasIO && !reduce && counters.length) {
+    counters.forEach(function (el) { el.textContent = "0"; });
+    var cio = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { countUp(e.target); cio.unobserve(e.target); } }); }, { threshold: 0.6 });
+    counters.forEach(function (el) { cio.observe(el); });
+  }
+
+  /* Scroll: progress bar, compact header, hero parallax, mobile call bar */
+  var hdr = $(".hdr"), heroImg = $(".hero > img") || $(".banner > img"), callbar = $(".callbar"), ticking = false;
+  var prog = document.createElement("div"); prog.className = "progress-bar"; prog.setAttribute("aria-hidden", "true"); document.body.appendChild(prog);
+  function onScroll() {
+    var y = window.scrollY || window.pageYOffset || 0, H = document.documentElement.scrollHeight - window.innerHeight;
+    prog.style.transform = "scaleX(" + (H > 0 ? Math.min(1, y / H) : 0) + ")";
+    if (hdr) hdr.classList.toggle("scrolled", y > 40);
+    if (heroImg && !reduce && y < 1400) heroImg.style.translate = "0 " + (y * 0.3).toFixed(1) + "px";
+    if (callbar) callbar.classList.toggle("show", y > 280);
+    ticking = false;
+  }
+  window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  onScroll();
 
   /* Gallery filters */
   var filters = $(".filters");
@@ -64,7 +116,11 @@
       var b = e.target.closest("button"); if (!b) return;
       var f = b.getAttribute("data-f");
       $$("button", filters).forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
-      $$(".gal figure").forEach(function (fig) { fig.hidden = !(f === "all" || fig.getAttribute("data-cat") === f); });
+      $$(".gal figure").forEach(function (fig) {
+        var show = f === "all" || fig.getAttribute("data-cat") === f;
+        fig.hidden = !show;
+        if (show && !reduce) { fig.classList.remove("pop"); void fig.offsetWidth; fig.classList.add("pop"); }
+      });
     });
   }
 
@@ -115,11 +171,19 @@
   function shrub(ctx, cx, cy, r, seed) { var R = rng(seed), cols = ["#2f6b2a", "#3e8a34", "#4fa043", "#285c24", "#5fae4a"]; ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.arc(cx + r * .15, cy + r * .18, r, 0, 7); ctx.fill();
     for (var i = 0; i < 26; i++) { var a = R() * 6.283, dd = R() * r * .7; ctx.fillStyle = cols[(R() * 5) | 0]; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * dd, cy + Math.sin(a) * dd, r * (.25 + R() * .3), 0, 7); ctx.fill(); } }
   function design() { return { p: $("input[name=pat]:checked").value, c: $("input[name=col]:checked").value, b: $("#dzBorder").checked }; }
-  function drawDesigner() {
+  var dzRaf = 0;
+  function drawDesigner(anim) {
     var cv = $("#dzCanvas"); if (!cv) return;
     var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2), w = Math.min(1400, Math.round(r.width * dpr)), h = Math.round(w * 10 / 16);
-    cv.width = w; cv.height = h; var c = cv.getContext("2d"), d = design();
+    cv.width = w; cv.height = h;
+    var off = document.createElement("canvas"); off.width = w; off.height = h;
+    var c = off.getContext("2d"), d = design();
     var g = w * .16, u = Math.max(12, w / 48);
+    /* prepared gravel bed shown before the pavers are laid */
+    var bed = document.createElement("canvas"); bed.width = w; bed.height = h; var bc = bed.getContext("2d"), BR = rng(98);
+    grass(bc, 0, 0, g, h, 91); grass(bc, w - g, 0, g, h, 92);
+    bc.fillStyle = "#77736a"; bc.fillRect(g, 0, w - 2 * g, h);
+    for (var q = 0; q < (w - 2 * g) * h / 30; q++) { bc.fillStyle = ["#8d887d", "#5f5b54", "#a19b8e", "#6c675e"][(BR() * 4) | 0]; bc.fillRect(g + BR() * (w - 2 * g), BR() * h, 1 + BR() * 3, 1 + BR() * 3); }
     grass(c, 0, 0, g, h, 91); grass(c, w - g, 0, g, h, 92);
     paverField(c, g, 0, w - 2 * g, h, d.p, d.c, u, 93, d.p === "herringbone");
     if (d.b) { var R = rng(94), bl = []; for (var y = -u; y < h; y += u) { bl.push([g, y, 2 * u, u]); bl.push([w - g - 2 * u, y, 2 * u, u]); } c.fillStyle = "#24221f"; c.fillRect(g, 0, 2 * u, h); c.fillRect(w - g - 2 * u, 0, 2 * u, h); drawBricks(c, bl, PAVERS[BORDER[d.c]], Math.max(1.5, u * .09), R, 2); }
@@ -127,16 +191,33 @@
     shrub(c, g * .45, h * .22, g * .3, 95); shrub(c, g * .5, h * .72, g * .26, 96); shrub(c, w - g * .5, h * .45, g * .32, 97);
     var vg = c.createRadialGradient(w * .45, h * .35, Math.min(w, h) * .2, w / 2, h / 2, Math.max(w, h) * .75); vg.addColorStop(0, "rgba(255,240,210,.06)"); vg.addColorStop(1, "rgba(0,0,0,.35)"); c.fillStyle = vg; c.fillRect(0, 0, w, h);
     $("#dzLabel").textContent = NAMES[d.p] + " · " + NAMES[d.c] + (d.b ? " · " + NAMES[BORDER[d.c]] + L.border : "");
+    var vc = cv.getContext("2d");
+    cancelAnimationFrame(dzRaf);
+    if (!anim || reduce) { vc.drawImage(off, 0, 0); return; }
+    /* lay the pavers from the street end (bottom) up to the garage */
+    var t0 = null;
+    function frame(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min(1, (ts - t0) / 1100), e = 1 - Math.pow(1 - p, 3), edge = Math.round(h * (1 - e));
+      vc.drawImage(bed, 0, 0);
+      if (h - edge > 0) vc.drawImage(off, 0, edge, w, h - edge, 0, edge, w, h - edge);
+      if (p < 1) { vc.fillStyle = "rgba(108,192,74,.95)"; vc.fillRect(g, Math.max(0, edge - 2), w - 2 * g, 3); dzRaf = requestAnimationFrame(frame); }
+    }
+    dzRaf = requestAnimationFrame(frame);
   }
   if ($("#dzCanvas")) {
-    $$("input[name=pat],input[name=col],#dzBorder").forEach(function (el) { el.addEventListener("change", drawDesigner); });
+    $$("input[name=pat],input[name=col],#dzBorder").forEach(function (el) { el.addEventListener("change", function () { drawDesigner(true); }); });
     $("#dzQuote").addEventListener("click", function () {
       var d = design(), msg = L.want(NAMES[d.p], NAMES[d.c], d.b ? NAMES[BORDER[d.c]] : "");
       try { sessionStorage.setItem("ar-design", msg); } catch (e) {}
       location.href = "contact.html#estimate";
     });
-    drawDesigner();
-    var lw = window.innerWidth, rz; window.addEventListener("resize", function () { if (Math.abs(window.innerWidth - lw) < 40) return; lw = window.innerWidth; clearTimeout(rz); rz = setTimeout(drawDesigner, 200); });
+    drawDesigner(false);
+    if (hasIO && !reduce) {
+      var dio = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { drawDesigner(true); dio.disconnect(); } }, { threshold: 0.45 });
+      dio.observe($("#dzCanvas"));
+    }
+    var lw = window.innerWidth, rz; window.addEventListener("resize", function () { if (Math.abs(window.innerWidth - lw) < 40) return; lw = window.innerWidth; clearTimeout(rz); rz = setTimeout(function () { drawDesigner(false); }, 200); });
   }
 
   /* ---- Estimate form ---- */
