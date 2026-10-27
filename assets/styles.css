@@ -271,7 +271,7 @@ footer{background:var(--ink);border-top:1px solid var(--line)}
 /* Hero: headline words rise, then the rest follows */
 @keyframes rise{from{opacity:0;transform:translateY(.55em) rotate(2deg)}to{opacity:1;transform:none}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.js .hero h1.split .w{display:inline-block;opacity:0;animation:rise .75s cubic-bezier(.2,.75,.25,1) forwards;animation-delay:calc(var(--d) + 250ms)}
+.js .hero h1.wsplit .w{display:inline-block;opacity:0;animation:rise .75s cubic-bezier(.2,.75,.25,1) forwards;animation-delay:calc(var(--d) + 250ms)}
 .js .hero .verified{animation:fadeUp .6s ease both .1s}
 .js .hero .lede{animation:fadeUp .7s ease both 1.1s}
 .js .hero .ctas{animation:fadeUp .7s ease both 1.3s}
@@ -340,7 +340,7 @@ footer{background:var(--ink);border-top:1px solid var(--line)}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .js .hero h1.split .w,.js figure.reveal .layer,.js .step.reveal b{opacity:1!important;transform:none!important;animation:none!important}
+  .js .hero h1.wsplit .w,.js figure.reveal .layer,.js .step.reveal b{opacity:1!important;transform:none!important;animation:none!important}
   .js .step.reveal::before{transform:scaleX(1)}
   .cta::before{animation:none}
   .js .callbar{transform:none}

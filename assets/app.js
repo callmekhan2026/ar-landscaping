@@ -70,7 +70,7 @@
         } else if (n.nodeType === 1) { walk(n); }
       });
     })(h1);
-    h1.classList.add("split");
+    h1.classList.add("wsplit");
   }
 
   /* Reveal on scroll, staggered within each group */
