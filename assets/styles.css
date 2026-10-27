@@ -304,8 +304,8 @@ footer{background:var(--ink);border-top:1px solid var(--line)}
 
 /* Cross-section builds up from the soil, like the real job */
 @keyframes layIn{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
-@keyframes compact{0%{opacity:0;transform:translateY(-26px) scaleY(1.25)}60%{opacity:1;transform:translateY(0) scaleY(.94)}80%{transform:scaleY(1.02)}100%{transform:none}}
-@keyframes dropIn{0%{opacity:0;transform:translateY(-40px)}70%{opacity:1;transform:translateY(3px)}100%{transform:none}}
+@keyframes compact{0%{opacity:0;transform:translateY(-26px) scaleY(1.25)}60%{opacity:1;transform:translateY(0) scaleY(.94)}80%{opacity:1;transform:scaleY(1.02)}100%{opacity:1;transform:none}}
+@keyframes dropIn{0%{opacity:0;transform:translateY(-40px)}70%{opacity:1;transform:translateY(3px)}100%{opacity:1;transform:none}}
 .js figure.reveal .layer{opacity:0}
 .js figure.reveal.in .l5{animation:layIn .55s ease forwards 0s}
 .js figure.reveal.in .l4{animation:layIn .5s ease forwards .35s}
