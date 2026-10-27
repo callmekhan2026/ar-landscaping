@@ -345,3 +345,23 @@ footer{background:var(--ink);border-top:1px solid var(--line)}
   .cta::before{animation:none}
   .js .callbar{transform:none}
 }
+
+/* ===================== Google reviews ===================== */
+.rv-top{display:flex;flex-wrap:wrap;gap:40px;align-items:center;margin-bottom:40px}
+.rv-copy{flex:999 1 420px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.rv-score{flex:1 1 260px;max-width:340px;background:var(--fg);color:#14201A;border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.g-word{font-family:'Product Sans',var(--body);font-size:22px;letter-spacing:-.5px}
+.g-word b{font-weight:600}
+.rv-num{font-family:var(--display);font-weight:900;font-size:72px;line-height:1;font-variant-numeric:tabular-nums}
+.rv-stars{position:relative;width:150px;height:28px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23D5D9D3' d='M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z'/%3E%3C/svg%3E") 0 0/30px 28px repeat-x}
+.rv-fill{position:absolute;inset:0 auto 0 0;width:98%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FBBC04' d='M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z'/%3E%3C/svg%3E") 0 0/30px 28px repeat-x}
+.js .rv-score.reveal .rv-fill{width:0;transition:width 1.3s cubic-bezier(.2,.7,.2,1) .4s}
+.js .rv-score.reveal.in .rv-fill{width:98%}
+.rv-count{font-weight:600;color:#4A5A50;margin-bottom:8px}
+.themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.theme{position:relative;background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:26px 24px 24px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.theme .q{position:absolute;right:14px;top:-18px;font-family:var(--display);font-size:120px;line-height:1;color:var(--green);opacity:.18}
+.theme h3{font-family:var(--display);font-weight:800;font-size:21px;line-height:1.2}
+.theme p{color:var(--muted);font-size:15.5px}
+.rv-note{margin-top:18px;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.js .rv-score.reveal .rv-fill{width:98%;transition:none}}
