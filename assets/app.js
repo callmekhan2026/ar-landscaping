@@ -483,4 +483,81 @@
     w.addEventListener("mouseenter", function () { say(LINES.cta); });
   })();
 
+  /* ---- Short film: call → drive → quote → fix → done ---- */
+  var film = $("#film");
+  if (film) (function () {
+    var svg = $("svg", film), S = [0, 3.2, 8, 11, 14.2, 18], D = 18;
+    var sc = [1, 2, 3, 4, 5].map(function (i) { return $("#sc" + i, svg); });
+    var route = $("#froute", svg), truck = $("#truck", svg), eta = $("#f-eta", svg), cap = $("#f-cap", svg), prog = $("#f-prog", svg), calling = $("#f-calling", svg);
+    var rips = $$(".rip", svg), rows = $$(".qrow", svg), stamp = $("#stamp", svg), fixrect = $("#fixrect", svg), edge = $("#f-edge", svg), ba = $("#f-ba", svg), stars = $$(".fstar", svg), fcheck = $("#fcheck", svg), conf = $("#conf", svg);
+    var chapters = $$(".chapters button", film), sideCap = $(".film-cap", film), replay = $(".film-replay", film);
+    var caps = chapters.map(function (b) { return b.getAttribute("data-cap"); });
+    var TXT = { calling: film.getAttribute("data-calling"), eta: film.getAttribute("data-eta"), arrived: film.getAttribute("data-arrived"), before: film.getAttribute("data-before"), after: film.getAttribute("data-after") };
+    var RL = route.getTotalLength(); route.style.strokeDasharray = RL + " " + RL;
+    var cps = [], NS = "http://www.w3.org/2000/svg", cols = ["#6CC04A", "#FBBC04", "#F08A24", "#DCE1DC", "#4FA043"];
+    for (var i = 0; i < 46; i++) { var r = document.createElementNS(NS, "rect"); r.setAttribute("width", (6 + Math.random() * 6).toFixed(1)); r.setAttribute("height", (10 + Math.random() * 8).toFixed(1)); r.setAttribute("fill", cols[i % 5]); conf.appendChild(r); cps.push({ el: r, x: Math.random() * 600, d: Math.random() * 0.9, sp: 200 + Math.random() * 230, rot: Math.random() * 360, vr: (Math.random() - .5) * 540, sw: 10 + Math.random() * 30 }); }
+    function cl(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+    function ez(v) { v = cl(v); return v < .5 ? 2 * v * v : 1 - Math.pow(-2 * v + 2, 2) / 2; }
+    function back(v) { v = cl(v); var c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(v - 1, 3) + c1 * Math.pow(v - 1, 2); }
+    var t = 0, raf = 0, last = 0, lastK = -1, seen = false, inView = false;
+    function render() {
+      var k = 4; for (var q = 0; q < 5; q++) if (t < S[q + 1]) { k = q; break; }
+      for (var j = 0; j < 5; j++) {
+        var a = S[j], b = S[j + 1], fi = j === 0 ? 1 : cl((t - a) / .35), fo = j === 4 ? 1 : cl((b - t) / .35), o = Math.min(fi, fo);
+        sc[j].style.opacity = o.toFixed(3); sc[j].style.visibility = o > .001 ? "visible" : "hidden";
+      }
+      /* 1 · call */
+      var u = t;
+      rips.forEach(function (c, n) { var ph = (u * .9 + n / 3) % 1; c.setAttribute("r", (52 + ph * 110).toFixed(1)); c.setAttribute("opacity", ((1 - ph) * .7).toFixed(2)); });
+      calling.textContent = TXT.calling + ["", ".", "..", "..."][Math.floor(u * 3) % 4];
+      /* 2 · drive */
+      var p = ez((t - 3.6) / 3.7), pt = route.getPointAtLength(RL * p), pn = route.getPointAtLength(Math.min(RL, RL * p + 2)), pb = route.getPointAtLength(Math.max(0, RL * p - 2));
+      var ang = Math.atan2(pn.y - pb.y, pn.x - pb.x) * 180 / Math.PI;
+      route.style.strokeDashoffset = (RL * (1 - p)).toFixed(1);
+      truck.setAttribute("transform", "translate(" + pt.x.toFixed(1) + " " + (pt.y - 2).toFixed(1) + ") rotate(" + ang.toFixed(1) + ")");
+      eta.textContent = p < .999 ? TXT.eta.replace("%d", Math.max(1, Math.ceil(12 * (1 - p)))) : TXT.arrived;
+      /* 3 · quote */
+      u = t - 8;
+      rows.forEach(function (g, n) { var o = cl((u - .3 - n * .5) / .3); g.setAttribute("opacity", o.toFixed(2)); g.setAttribute("transform", "translate(" + ((1 - o) * -24).toFixed(1) + " 0)"); });
+      var st = cl((u - 2.1) / .35), sb = 1.7 - .7 * back((u - 2.1) / .35);
+      stamp.setAttribute("opacity", st.toFixed(2)); stamp.setAttribute("transform", "translate(380 446) rotate(-12) scale(" + (st > 0 ? sb : 1).toFixed(3) + ")");
+      /* 4 · fix */
+      u = t - 11;
+      var f = ez((u - .4) / 2.1), top = 600 - (600 - 192) * f;
+      fixrect.setAttribute("y", top.toFixed(1)); fixrect.setAttribute("height", (600 - top).toFixed(1));
+      edge.setAttribute("y", (top - 2).toFixed(1)); edge.setAttribute("opacity", f > 0 && f < 1 ? "1" : "0");
+      ba.textContent = f < .5 ? TXT.before : TXT.after;
+      /* 5 · done */
+      u = t - 14.2;
+      cps.forEach(function (c) { var tt = Math.max(0, u - c.d), y = -30 + tt * c.sp, x = c.x + Math.sin(tt * 3 + c.sw) * c.sw; c.el.setAttribute("transform", "translate(" + x.toFixed(1) + " " + y.toFixed(1) + ") rotate(" + (c.rot + tt * c.vr).toFixed(0) + ")"); c.el.setAttribute("opacity", u > c.d ? "1" : "0"); });
+      fcheck.style.transform = "scale(" + (u > 0 ? back(u / .45) : 0).toFixed(3) + ")";
+      stars.forEach(function (s, n) { s.style.opacity = cl((u - .5 - n * .15) / .2); });
+      prog.setAttribute("width", (600 * t / D).toFixed(1));
+      if (k !== lastK) { cap.textContent = caps[k]; sideCap.textContent = caps[k]; chapters.forEach(function (b, n) { if (n === k) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current"); }); lastK = k; }
+    }
+    function frame(ts) {
+      var dt = Math.min(.05, (ts - (last || ts)) / 1000); last = ts; t += dt;
+      if (t >= D) { t = D; render(); film.classList.add("ended"); return; }
+      render(); if (inView) raf = requestAnimationFrame(frame);
+    }
+    function play(from) {
+      t = from || 0; film.classList.remove("ended"); cancelAnimationFrame(raf);
+      if (reduce) { render(); return; }
+      last = 0; raf = requestAnimationFrame(frame);
+    }
+    chapters.forEach(function (b) { b.addEventListener("click", function () { play(S[+b.getAttribute("data-i")] + .01); }); });
+    replay.addEventListener("click", function () { play(0); });
+    if (reduce) { t = D; render(); }
+    else {
+      render();
+      if (hasIO) new IntersectionObserver(function (es) {
+        inView = es[0].isIntersecting;
+        if (inView && !seen) { seen = true; play(0); }
+        else if (inView && t < D) { last = 0; raf = requestAnimationFrame(frame); }
+        else cancelAnimationFrame(raf);
+      }, { threshold: .45 }).observe(svg);
+      else { inView = true; play(0); }
+    }
+  })();
+
 })();
