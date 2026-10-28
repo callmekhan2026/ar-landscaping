@@ -385,3 +385,11 @@ footer{background:var(--ink);border-top:1px solid var(--line)}
 .rain-hint{margin-top:10px;font-size:13.5px;color:var(--muted)}
 .base figure,figure.reveal{position:relative}
 .dust{position:absolute;left:0;right:0;top:-60px;width:100%;height:calc(100% + 60px);pointer-events:none;z-index:2}
+
+/* ===================== 3D tilt cards ===================== */
+.svc,.theme,.value{transform-style:preserve-3d;will-change:transform}
+.js .svc.reveal.in,.js .theme.reveal.in,.js .value.reveal.in{transition:opacity .6s ease,transform .45s cubic-bezier(.2,.7,.2,1),border-color .2s ease}
+.js .svc.reveal.in.tilt,.js .theme.reveal.in.tilt,.js .value.reveal.in.tilt{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(0) scale(1.015);transition:transform .12s ease-out,border-color .2s ease}
+.svc::after,.theme::after,.value::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .25s ease;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.16),transparent 55%)}
+.svc.tilt::after,.theme.tilt::after,.value.tilt::after{opacity:1}
+.value{position:relative}

@@ -404,4 +404,22 @@
     if (l1) l1.addEventListener("animationend", function () { puff(l1, 90); });
   })();
 
+  /* ---- 3D tilt on cards (mouse only) ---- */
+  if (!reduce && window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    $$(".svc, .theme, .value").forEach(function (card) {
+      var raf2 = 0;
+      card.addEventListener("pointermove", function (e) {
+        var r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        cancelAnimationFrame(raf2);
+        raf2 = requestAnimationFrame(function () {
+          card.classList.add("tilt");
+          card.style.setProperty("--ry", ((x - .5) * 10).toFixed(2) + "deg");
+          card.style.setProperty("--rx", ((.5 - y) * 8).toFixed(2) + "deg");
+          card.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+          card.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+        });
+      });
+      card.addEventListener("pointerleave", function () { cancelAnimationFrame(raf2); card.classList.remove("tilt"); card.style.removeProperty("--rx"); card.style.removeProperty("--ry"); });
+    });
+  }
 })();
