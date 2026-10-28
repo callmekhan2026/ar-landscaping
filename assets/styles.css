@@ -384,4 +384,4 @@ footer{background:var(--ink);border-top:1px solid var(--line)}
 .rain-ends{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;font-weight:500}
 .rain-hint{margin-top:10px;font-size:13.5px;color:var(--muted)}
 .base figure,figure.reveal{position:relative}
-.dust{position:absolute;left:-30px;right:-30px;top:-60px;bottom:-20px;width:calc(100% + 60px);height:calc(100% + 80px);pointer-events:none;z-index:2}
+.dust{position:absolute;left:0;right:0;top:-60px;width:100%;height:calc(100% + 60px);pointer-events:none;z-index:2}
