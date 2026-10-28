@@ -422,4 +422,65 @@
       card.addEventListener("pointerleave", function () { cancelAnimationFrame(raf2); card.classList.remove("tilt"); card.style.removeProperty("--rx"); card.style.removeProperty("--ry"); });
     });
   }
+  /* ---- Site mascot: a crew member who walks along with the scroll ---- */
+  (function () {
+    var LINES = ES ? { design: "Elija un patrón. Yo lo coloco.", base: "Primero la base. Siempre.", rain: "¿Pendiente mal? Saque el paraguas.", reviews: "¡59 reseñas y contando!", faq: "Pregúnteme lo que sea.", cta: "Tóqueme para un presupuesto gratis." }
+                   : { design: "Pick a pattern. I'll lay it.", base: "Base first. Always.", rain: "Wrong slope? Grab an umbrella.", reviews: "59 reviews and counting!", faq: "Ask me anything.", cta: "Tap me for a free estimate." };
+    var TOOL = { design: "t-shovel", base: "t-shovel", rain: "t-umbrella", reviews: "t-clip", faq: "t-clip", cta: "t-clip" };
+    var SVG = '<svg viewBox="0 -12 80 132" aria-hidden="true" focusable="false">' +
+      '<ellipse cx="40" cy="113" rx="17" ry="3.5" fill="rgba(0,0,0,.35)"/>' +
+      '<g class="leg leg-a"><rect x="33" y="76" width="8.5" height="30" rx="3" fill="#2a3a31"/><rect x="31" y="102" width="13" height="7" rx="2.5" fill="#4a3424"/></g>' +
+      '<g class="leg leg-b"><rect x="40" y="76" width="8.5" height="30" rx="3" fill="#33473b"/><rect x="39" y="102" width="13" height="7" rx="2.5" fill="#5a4030"/></g>' +
+      '<g class="upper">' +
+        '<rect x="30" y="50" width="7" height="22" rx="3" fill="#35793a"/>' +
+        '<rect x="28" y="45" width="26" height="35" rx="7" fill="#F08A24"/>' +
+        '<rect x="28" y="60" width="26" height="4" fill="#DCE1DC"/><rect x="33" y="45" width="3.5" height="35" fill="#DCE1DC"/><rect x="46" y="45" width="3.5" height="35" fill="#DCE1DC"/>' +
+        '<circle cx="41" cy="33" r="11" fill="#C98E62"/>' +
+        '<circle cx="46" cy="32" r="1.7" fill="#14201A"/><path d="M43 38 q3 2 6 -1" stroke="#14201A" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
+        '<path d="M30 28 Q41 10 52 28 Z" fill="#F2C230"/><rect x="27" y="26.5" width="29" height="4" rx="2" fill="#E0AE1C"/><rect x="39.5" y="15" width="3" height="12" rx="1.5" fill="#E0AE1C"/>' +
+        '<g class="arm">' +
+          '<g class="tool tool-shovel"><line x1="47" y1="38" x2="53" y2="98" stroke="#8B5A2B" stroke-width="3.2" stroke-linecap="round"/><path d="M47.5 95 L58.5 94 L57 108 Q53.5 113 50 108 Z" fill="#9aa3a0"/></g>' +
+          '<g class="tool tool-umbrella"><path d="M49 72 L49 20" stroke="#222" stroke-width="2.4"/><path d="M22 22 Q49 -10 76 22 Q69 17 62 22 Q55.5 16 49 22 Q42.5 16 36 22 Q29 17 22 22 Z" fill="#4FA043" stroke="#2f6b2a" stroke-width="1.2"/></g>' +
+          '<g class="tool tool-clip"><rect x="49" y="58" width="17" height="21" rx="2" fill="#8B5A2B"/><rect x="51" y="61" width="13" height="16" rx="1" fill="#fff"/><rect x="54.5" y="56" width="6" height="4" rx="1" fill="#9aa3a0"/><path d="M53 66h9M53 70h9M53 74h6" stroke="#4FA043" stroke-width="1.4"/></g>' +
+          '<rect x="45" y="49" width="7" height="22" rx="3" fill="#3E8E3A"/><circle cx="48.5" cy="72" r="3.8" fill="#C98E62"/>' +
+        '</g>' +
+      '</g></svg>';
+    var w = document.createElement("a");
+    w.className = "worker t-shovel"; w.href = "contact.html";
+    w.setAttribute("aria-label", ES ? "Pida un presupuesto gratis" : "Get a free estimate");
+    w.innerHTML = '<span class="bubble" aria-hidden="true"></span>' + SVG;
+    document.body.appendChild(w);
+    var bubble = $(".bubble", w), lastY = window.scrollY || 0, idleT, bubT, cur = "", queued = false;
+    function say(txt) { if (!txt) return; bubble.textContent = txt; bubble.classList.add("show"); clearTimeout(bubT); bubT = setTimeout(function () { bubble.classList.remove("show"); }, 2800); }
+    function place() {
+      queued = false;
+      var y = window.scrollY || window.pageYOffset || 0, Hd = document.documentElement.scrollHeight - window.innerHeight;
+      var p = Hd > 0 ? Math.min(1, Math.max(0, y / Hd)) : 0, size = w.offsetWidth || 60, m = 12;
+      var x = m + p * (window.innerWidth - size - 2 * m);
+      w.style.setProperty("--wx", x.toFixed(1) + "px");
+      w.classList.toggle("bright", x > window.innerWidth / 2);
+      if (y !== lastY && !reduce) {
+        w.classList.toggle("left", y < lastY); w.classList.add("walking");
+        clearTimeout(idleT); idleT = setTimeout(function () { w.classList.remove("walking"); }, 180);
+      }
+      lastY = y;
+    }
+    window.addEventListener("scroll", function () { if (!queued) { queued = true; requestAnimationFrame(place); } }, { passive: true });
+    window.addEventListener("resize", place);
+    place();
+    var targets = [["design", $("#design")], ["base", lay ? lay.parentNode : null], ["rain", $("#rain")], ["reviews", $("#reviews")], ["faq", $("#faq")], ["cta", $(".cta")]].filter(function (t) { return t[1]; });
+    if (hasIO && targets.length) {
+      var sio = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          var k = e.target._mk; if (k === cur) return; cur = k;
+          w.className = w.className.replace(/\bt-[a-z]+/, TOOL[k] || "t-shovel");
+          say(LINES[k]);
+        });
+      }, { rootMargin: "-40% 0px -40% 0px" });
+      targets.forEach(function (t) { t[1]._mk = t[0]; sio.observe(t[1]); });
+    }
+    w.addEventListener("mouseenter", function () { say(LINES.cta); });
+  })();
+
 })();
