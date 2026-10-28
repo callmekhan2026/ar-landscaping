@@ -54,7 +54,7 @@
   var hasIO = "IntersectionObserver" in window;
 
   /* Hero headline: words rise in one after another */
-  var h1 = $(".hero h1");
+  var h1 = $(".hero .hero-title");
   if (h1 && !reduce) {
     var wi = 0;
     (function walk(node) {
