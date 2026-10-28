@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://images.unsplash.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800;1,900&family=Roboto+Slab:wght@700;800;900&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=6">
+<link rel="stylesheet" href="assets/styles.css?v=7">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "HomeAndConstructionBusiness", "name": "A R Landscaping and Construction", "telephone": ["+1-781-299-2751", "+1-781-499-3411"], "areaServed": "Massachusetts", "url": "https://lunadigital26.github.io/ar-landscaping/", "sameAs": ["https://share.google/ZnZwbY20VBhbtulnJ"], "makesOffer": [{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Driveway & walkway paving"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Retaining walls"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Stone masonry"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Concrete masonry"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Grading & resloping"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Hardscapes"}}, {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Driveway landscaping"}}]}</script>
 </head>
 <body>
@@ -117,6 +117,27 @@
   </div>
 </section>
 
+<section class="sec deep" id="rain">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="kicker">Rain test</span><h2>Watch where the water goes.</h2></div><p>Water should run away from your house. Drag the slider to regrade the yard and see what changes in the basement.</p></div>
+    <div class="rain-wrap">
+      <canvas id="rainCanvas" role="img" aria-label="Animated rain on a house and yard. With the yard sloped toward the house, water pools at the foundation and leaks into the basement; regraded, it runs off to the street."></canvas>
+      <p class="rain-status warn" id="rainStatus" aria-live="polite"></p>
+    </div>
+    <div class="rain-controls">
+      <div class="seg" role="group" aria-label="Yard slope">
+        <button type="button" data-slope="-60" aria-pressed="true">Before: slopes toward the house</button>
+        <button type="button" data-slope="70" aria-pressed="false">After: regraded by A R</button>
+      </div>
+      <label class="rain-range" for="rainSlope">Yard slope
+        <input type="range" id="rainSlope" min="-100" max="100" step="1" value="-60">
+        <span class="rain-ends"><span>Toward the house</span><span>Away from the house</span></span>
+      </label>
+    </div>
+    <p class="rain-hint">Tap the picture for a downpour.</p>
+  </div>
+</section>
+
 <section class="sec alt" id="reviews">
   <div class="wrap">
     <div class="rv-top">
@@ -165,6 +186,6 @@
 </footer>
 <div class="callbar"><a class="btn btn-ghost" href="tel:7812992751">Call 781.299.2751</a><a class="btn btn-green" href="contact.html">Free estimate</a></div>
 <div class="toast" id="toast" role="status" hidden></div>
-<script src="assets/app.js?v=6" defer></script>
+<script src="assets/app.js?v=7" defer></script>
 </body>
 </html>

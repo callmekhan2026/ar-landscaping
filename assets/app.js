@@ -244,4 +244,163 @@
         .catch(function () { btn.disabled = false; btn.textContent = L.submit; err.textContent = L.fail; err.hidden = false; });
     });
   }
+  /* ---- Rain test: live grading demo ---- */
+  var rc = $("#rainCanvas");
+  if (rc) (function () {
+    var RL = ES ? { house: "CASA", basement: "SÓTANO", street: "HACIA LA CALLE →", spout: "BAJANTE", toward: "El agua corre hacia sus cimientos", flat: "Terreno plano: el agua se encharca", away: "El agua se aleja de la casa", wet: "Agua en el sótano", dry: "Sótano seco" }
+                 : { house: "HOUSE", basement: "BASEMENT", street: "TO THE STREET →", spout: "DOWNSPOUT", toward: "Water is running toward your foundation", flat: "Flat yard: water sits and puddles", away: "Water runs away from the house", wet: "Water in the basement", dry: "Dry basement" };
+    var ctx = rc.getContext("2d"), W = 0, H = 0, dpr = 1, xH = 0, gy = 0, A = 0, wallTop = 0, peakY = 0, bTop = 0, bBot = 0, bL = 0;
+    var range = $("#rainSlope"), statusEl = $("#rainStatus"), presets = $$("[data-slope]");
+    var slope = range ? range.value / 100 : -0.6, target = slope;
+    var drops = [], runs = [], sparks = [], drips = [], pool = 120, base = 0.35, visible = false, raf = 0, last = 0, burst = 0, lastState = "";
+    function size() {
+      var r = rc.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+      W = Math.max(300, Math.round(r.width * dpr)); H = Math.max(200, Math.round(r.height * dpr)); rc.width = W; rc.height = H;
+      xH = W * 0.32; gy = H * 0.6; A = H * 0.2; wallTop = gy - H * 0.3; peakY = wallTop - H * 0.15;
+      bL = W * 0.05; bTop = gy + H * 0.06; bBot = Math.min(H - 6 * dpr, gy + H * 0.34);
+    }
+    function groundY(x) { var u = x < xH ? 0 : (x - xH) / (W - xH); return gy + slope * A * (u - 0.5); }
+    function roofY(x) { var mid = xH * 0.5; return x <= mid ? wallTop - (peakY - wallTop) * -1 * (x / mid) : peakY + (wallTop - peakY) * ((x - mid) / (xH + 10 * dpr - mid)); }
+    function poolLevel() { return Math.min(A * 0.55, Math.sqrt(Math.max(0, pool)) * 1.6 * dpr); }
+    function poolEdge(Ly) { var x = xH; while (x < W && groundY(x) > Ly) x += 3; return x; }
+    function spawn(n) {
+      for (var i = 0; i < n && drops.length < 420; i++) drops.push({ x: Math.random() * W, y: -Math.random() * H * 0.3, v: (900 + Math.random() * 500) * dpr / 1.5 });
+    }
+    function setStatus() {
+      var st = slope < -0.12 ? "warn" : slope > 0.12 ? "ok" : "flat";
+      var txt = (st === "warn" ? RL.toward : st === "ok" ? RL.away : RL.flat) + " · " + (base > 0.06 ? RL.wet : RL.dry);
+      if (txt !== lastState && statusEl) { statusEl.textContent = txt; statusEl.className = "rain-status " + st; lastState = txt; }
+    }
+    function step(dt) {
+      slope += (target - slope) * Math.min(1, dt * 3.5);
+      spawn(Math.round((150 + burst * 900) * dt * (W / (900 * dpr)) + Math.random()));
+      burst = Math.max(0, burst - dt * 0.6);
+      var Ly = poolLevel() > 1 ? groundY(xH) - poolLevel() : 1e9, pe = Ly < 1e9 ? poolEdge(Ly) : xH, roofEnd = xH + 10 * dpr;
+      for (var i = drops.length - 1; i >= 0; i--) {
+        var d = drops[i]; d.y += d.v * dt;
+        if (d.x < roofEnd && d.y >= roofY(d.x)) { drops.splice(i, 1); runs.push({ x: xH + 8 * dpr + Math.random() * 6 * dpr, life: 3 + Math.random() * 2, spout: true }); continue; }
+        if (d.x >= roofEnd) {
+          if (Ly < 1e9 && d.x < pe && d.y >= Ly) { drops.splice(i, 1); pool += 0.25; sparks.push({ x: d.x, y: Ly, vx: (Math.random() - .5) * 60 * dpr, vy: -120 * dpr * Math.random(), life: .35 }); continue; }
+          var g = groundY(d.x);
+          if (d.y >= g) {
+            drops.splice(i, 1);
+            if (Math.random() < .5) sparks.push({ x: d.x, y: g - 1, vx: (Math.random() - .5) * 90 * dpr, vy: -(60 + Math.random() * 120) * dpr, life: .3 + Math.random() * .2 });
+            if (Math.random() < .55) runs.push({ x: d.x, life: 2 + Math.random() * 2.5 });
+            continue;
+          }
+        }
+        if (d.y > H) drops.splice(i, 1);
+      }
+      var speed = 230 * dpr * slope;
+      for (var j = runs.length - 1; j >= 0; j--) {
+        var r = runs[j]; r.life -= dt * (Math.abs(slope) < 0.1 ? 1.6 : 0.5);
+        r.x += (speed + (r.spout ? speed * 0.4 : 0)) * dt * (0.75 + Math.random() * 0.5);
+        if (r.x <= xH + 2 * dpr) { runs.splice(j, 1); pool += 1; continue; }
+        if (r.x >= W || r.life <= 0) { runs.splice(j, 1); continue; }
+        if (Ly < 1e9 && r.x < pe) { runs.splice(j, 1); pool += 0.6; continue; }
+      }
+      if (runs.length > 900) runs.splice(0, runs.length - 900);
+      for (var k = sparks.length - 1; k >= 0; k--) { var s = sparks[k]; s.life -= dt; s.vy += 900 * dpr * dt; s.x += s.vx * dt; s.y += s.vy * dt; if (s.life <= 0) sparks.splice(k, 1); }
+      if (slope > 0.12) pool = Math.max(0, pool - dt * (60 + pool * 0.6)); else pool = Math.max(0, pool - dt * 4);
+      pool = Math.min(pool, 900);
+      if (pool > 20) { base = Math.min(1, base + dt * pool * 0.00012); if (Math.random() < dt * 6) drips.push({ x: xH - 6 * dpr - Math.random() * 4 * dpr, y: bTop + 6 * dpr, vy: 0 }); }
+      else base = Math.max(0, base - dt * 0.05);
+      for (var m = drips.length - 1; m >= 0; m--) { var q = drips[m]; q.vy += 700 * dpr * dt; q.y += q.vy * dt; if (q.y > bBot - (bBot - bTop) * 0.6 * base - 2) drips.splice(m, 1); }
+      setStatus();
+    }
+    function draw() {
+      var c = ctx, sky = c.createLinearGradient(0, 0, 0, gy);
+      sky.addColorStop(0, "#0a1510"); sky.addColorStop(1, "#14271c"); c.fillStyle = sky; c.fillRect(0, 0, W, H);
+      /* rain */
+      c.strokeStyle = "rgba(175,205,235,.55)"; c.lineWidth = 1.2 * dpr; c.beginPath();
+      for (var i = 0; i < drops.length; i++) { var d = drops[i]; c.moveTo(d.x, d.y); c.lineTo(d.x - 1.5 * dpr, d.y - 14 * dpr); }
+      c.stroke();
+      /* ground */
+      c.beginPath(); c.moveTo(0, groundY(0));
+      for (var x = 0; x <= W; x += 6) c.lineTo(x, groundY(x));
+      c.lineTo(W, H); c.lineTo(0, H); c.closePath();
+      var soil = c.createLinearGradient(0, gy - A, 0, H); soil.addColorStop(0, "#5b4632"); soil.addColorStop(1, "#2e2318"); c.fillStyle = soil; c.fill();
+      c.strokeStyle = "#4b8a36"; c.lineWidth = 7 * dpr; c.beginPath(); c.moveTo(xH, groundY(xH)); for (x = xH; x <= W; x += 6) c.lineTo(x, groundY(x)); c.stroke();
+      /* basement cutaway */
+      var bh = bBot - bTop; c.fillStyle = "#121a16"; c.fillRect(bL, bTop, xH - bL, bh);
+      if (base > 0.01) { c.fillStyle = "rgba(79,163,217,.75)"; c.fillRect(bL, bBot - bh * 0.6 * base, xH - bL, bh * 0.6 * base); }
+      c.fillStyle = "rgba(79,163,217,.9)"; for (var m = 0; m < drips.length; m++) c.fillRect(drips[m].x, drips[m].y, 2 * dpr, 5 * dpr);
+      c.strokeStyle = "#8a8c8a"; c.lineWidth = 6 * dpr; c.strokeRect(bL, bTop, xH - bL, bh);
+      c.fillStyle = "rgba(220,225,220,.55)"; c.font = "700 " + Math.round(11 * dpr) + "px Poppins, sans-serif"; c.textAlign = "center";
+      c.fillText(RL.basement, (bL + xH) / 2, bTop + 20 * dpr);
+      /* house */
+      c.fillStyle = "#233229"; c.fillRect(bL - 6 * dpr, wallTop, xH - bL + 6 * dpr, groundY(xH) - wallTop + 2);
+      c.strokeStyle = "rgba(255,255,255,.05)"; c.lineWidth = 1 * dpr; for (var yy = wallTop + 10 * dpr; yy < groundY(xH); yy += 10 * dpr) { c.beginPath(); c.moveTo(bL - 6 * dpr, yy); c.lineTo(xH, yy); c.stroke(); }
+      var winW = (xH - bL) * 0.26, winH = (gy - wallTop) * 0.34, wx = bL + (xH - bL) * 0.18, wy = wallTop + (gy - wallTop) * 0.22;
+      c.fillStyle = "#f2c66d"; c.globalAlpha = .85; c.fillRect(wx, wy, winW, winH); c.fillRect(wx + winW * 1.6, wy, winW, winH); c.globalAlpha = 1;
+      c.fillStyle = "#16201b"; c.beginPath(); c.moveTo(bL - 16 * dpr, wallTop); c.lineTo(xH * 0.5, peakY); c.lineTo(xH + 10 * dpr, wallTop); c.closePath(); c.fill();
+      c.fillStyle = "#5d635e"; c.fillRect(xH, wallTop, 5 * dpr, groundY(xH) - wallTop - 4 * dpr);
+      c.fillStyle = "rgba(220,225,220,.6)"; c.fillText(RL.house, (bL + xH) / 2, wallTop + (gy - wallTop) * 0.8);
+      c.textAlign = "left"; c.font = "600 " + Math.round(10 * dpr) + "px Poppins, sans-serif"; c.fillText(RL.spout, xH + 9 * dpr, wallTop + 14 * dpr);
+      /* pool against the foundation */
+      var pl = poolLevel();
+      if (pl > 1) {
+        var Ly = groundY(xH) - pl, pe = poolEdge(Ly);
+        c.beginPath(); c.moveTo(xH + 2, Ly); c.lineTo(pe, Ly); for (var px = pe; px >= xH; px -= 4) c.lineTo(px, groundY(px)); c.closePath();
+        c.fillStyle = "rgba(79,163,217,.78)"; c.fill();
+        c.strokeStyle = "rgba(200,230,255,.8)"; c.lineWidth = 1.5 * dpr; c.beginPath(); c.moveTo(xH + 2, Ly); c.lineTo(pe, Ly); c.stroke();
+      }
+      /* runoff */
+      c.fillStyle = "rgba(120,185,235,.85)";
+      for (var j = 0; j < runs.length; j++) { var r = runs[j]; c.fillRect(r.x, groundY(r.x) - 3 * dpr, 3 * dpr, 2 * dpr); }
+      c.fillStyle = "rgba(190,220,245,.9)";
+      for (var k = 0; k < sparks.length; k++) c.fillRect(sparks[k].x, sparks[k].y, 1.6 * dpr, 1.6 * dpr);
+      c.textAlign = "right"; c.fillStyle = "rgba(220,225,220,.6)"; c.font = "700 " + Math.round(11 * dpr) + "px Poppins, sans-serif";
+      c.fillText(RL.street, W - 12 * dpr, Math.min(H - 10 * dpr, groundY(W) + 22 * dpr));
+    }
+    function loop(ts) {
+      var dt = Math.min(0.05, (ts - (last || ts)) / 1000); last = ts;
+      step(dt); draw();
+      if (visible) raf = requestAnimationFrame(loop); else last = 0;
+    }
+    function start() { if (!visible) { visible = true; last = 0; raf = requestAnimationFrame(loop); } }
+    function stop() { visible = false; cancelAnimationFrame(raf); }
+    function setTarget(v) {
+      target = v / 100; if (range) range.value = v;
+      presets.forEach(function (b) { b.setAttribute("aria-pressed", (+b.getAttribute("data-slope") > 0) === (v > 0) ? "true" : "false"); });
+      if (reduce) { slope = target; pool = slope < -0.12 ? 260 : 0; base = slope < -0.12 ? 0.5 : 0; setStatus(); draw(); }
+    }
+    if (range) range.addEventListener("input", function () { setTarget(+range.value); });
+    presets.forEach(function (b) { b.addEventListener("click", function () { setTarget(+b.getAttribute("data-slope")); }); });
+    rc.addEventListener("click", function () { burst = 1; });
+    size(); setTarget(range ? +range.value : -60); setStatus(); draw();
+    if (!reduce) {
+      for (var w = 0; w < 40; w++) spawn(4);
+      if (hasIO) { new IntersectionObserver(function (es) { es[0].isIntersecting ? start() : stop(); }, { threshold: 0.15 }).observe(rc); } else start();
+    }
+    var lw2 = window.innerWidth; window.addEventListener("resize", function () { if (Math.abs(window.innerWidth - lw2) < 40) return; lw2 = window.innerWidth; size(); draw(); });
+  })();
+
+  /* ---- Dust kicked up when the gravel compacts and the pavers land ---- */
+  var lay = $(".layers");
+  if (lay && !reduce) (function () {
+    var fig = lay.parentNode, dc = document.createElement("canvas"); dc.className = "dust"; dc.setAttribute("aria-hidden", "true"); fig.appendChild(dc);
+    var dctx = dc.getContext("2d"), parts = [], running = false, lastT = 0, dp = Math.min(window.devicePixelRatio || 1, 1.75);
+    function fit() { dc.width = Math.round(dc.clientWidth * dp); dc.height = Math.round(dc.clientHeight * dp); }
+    function puff(el, n) {
+      fit();
+      var fr = dc.getBoundingClientRect(), er = el.getBoundingClientRect(), y = (er.top - fr.top) * dp;
+      for (var i = 0; i < n; i++) parts.push({ x: Math.random() * dc.width, y: y + (Math.random() - .3) * 8 * dp, vx: (Math.random() - .5) * 120 * dp, vy: -(20 + Math.random() * 90) * dp, r: (4 + Math.random() * 12) * dp, life: 1, decay: .5 + Math.random() * .6, tone: Math.random() < .5 ? "205,187,146" : "160,150,132" });
+      if (!running) { running = true; lastT = 0; requestAnimationFrame(tick); }
+    }
+    function tick(ts) {
+      var dt = Math.min(0.05, (ts - (lastT || ts)) / 1000); lastT = ts;
+      dctx.clearRect(0, 0, dc.width, dc.height);
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var p = parts[i]; p.life -= dt * p.decay; p.vx *= 0.98; p.vy *= 0.97; p.x += p.vx * dt; p.y += p.vy * dt; p.r += 14 * dp * dt;
+        if (p.life <= 0) { parts.splice(i, 1); continue; }
+        dctx.fillStyle = "rgba(" + p.tone + "," + (p.life * 0.35).toFixed(3) + ")"; dctx.beginPath(); dctx.arc(p.x, p.y, p.r, 0, 6.283); dctx.fill();
+      }
+      if (parts.length) requestAnimationFrame(tick); else { running = false; dctx.clearRect(0, 0, dc.width, dc.height); }
+    }
+    var l3 = $(".l3", lay), l1 = $(".l1", lay);
+    if (l3) l3.addEventListener("animationend", function () { puff(l3, 60); });
+    if (l1) l1.addEventListener("animationend", function () { puff(l1, 90); });
+  })();
+
 })();
