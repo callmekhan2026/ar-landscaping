@@ -7,7 +7,7 @@
      To receive requests by email for free, set this to
      "https://formsubmit.co/ajax/YOUR-EMAIL@example.com"  (first submission
      sends a one-time activation email to that address). */
-  var FORM_ENDPOINT = "";
+  var FORM_ENDPOINT = "https://formsubmit.co/ajax/khansula20@gmail.com";
 
   document.documentElement.classList.add("js");
   var ES = (document.documentElement.lang || "").indexOf("es") === 0;
@@ -232,7 +232,7 @@
       if ($("#f-hp").value) return;
       err.hidden = true;
       var btn = $("button[type=submit]", form); btn.disabled = true; btn.textContent = L.sending;
-      var data = { name: n, phone: p, email: $("#f-email").value.trim(), town: $("#f-town").value.trim(), service: $("#f-svc").value, details: $("#f-notes").value.trim(), _subject: L.subject + $("#f-svc").value };
+      var data = { name: n, phone: p, email: $("#f-email").value.trim(), town: $("#f-town").value.trim(), service: $("#f-svc").value, details: $("#f-notes").value.trim(), _subject: L.subject + $("#f-svc").value, _template: "table", _captcha: "false", _replyto: $("#f-email").value.trim() || undefined, page: location.href };
       function done(sent) {
         $("#f-sum").textContent = n + ", " + data.service.toLowerCase() + (data.town ? L.in_ + data.town : "") + ".";
         $("#f-msg").textContent = sent ? L.sent : L.callUs;
@@ -240,7 +240,7 @@
       }
       if (!FORM_ENDPOINT) { done(false); return; }
       fetch(FORM_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(data) })
-        .then(function (r) { if (!r.ok) throw 0; done(true); })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok || !(j.success === true || j.success === "true")) throw 0; done(true); }); })
         .catch(function () { btn.disabled = false; btn.textContent = L.submit; err.textContent = L.fail; err.hidden = false; });
     });
   }
