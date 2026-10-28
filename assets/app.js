@@ -449,7 +449,7 @@
     w.className = "worker t-shovel"; w.href = "contact.html";
     w.setAttribute("aria-label", ES ? "Pida un presupuesto gratis" : "Get a free estimate");
     w.innerHTML = '<span class="bubble" aria-hidden="true"></span>' + SVG;
-    document.body.appendChild(w);
+    (document.querySelector("footer") || document.body).appendChild(w);
     var bubble = $(".bubble", w), lastY = window.scrollY || 0, idleT, bubT, cur = "", queued = false;
     function say(txt) { if (!txt) return; bubble.textContent = txt; bubble.classList.add("show"); clearTimeout(bubT); bubT = setTimeout(function () { bubble.classList.remove("show"); }, 2800); }
     function place() {
