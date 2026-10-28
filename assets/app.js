@@ -252,16 +252,16 @@
     var ctx = rc.getContext("2d"), W = 0, H = 0, dpr = 1, xH = 0, gy = 0, A = 0, wallTop = 0, peakY = 0, bTop = 0, bBot = 0, bL = 0;
     var range = $("#rainSlope"), statusEl = $("#rainStatus"), presets = $$("[data-slope]");
     var slope = range ? range.value / 100 : -0.6, target = slope;
-    var drops = [], runs = [], sparks = [], drips = [], pool = 120, base = 0.35, visible = false, raf = 0, last = 0, burst = 0, lastState = "";
+    var drops = [], runs = [], sparks = [], drips = [], pool = 120, base = 0.2, visible = false, raf = 0, last = 0, burst = 0, lastState = "";
     function size() {
       var r = rc.getBoundingClientRect(); dpr = Math.min(window.devicePixelRatio || 1, 1.75);
       W = Math.max(300, Math.round(r.width * dpr)); H = Math.max(200, Math.round(r.height * dpr)); rc.width = W; rc.height = H;
       xH = W * 0.32; gy = H * 0.6; A = H * 0.2; wallTop = gy - H * 0.3; peakY = wallTop - H * 0.15;
-      bL = W * 0.05; bTop = gy + H * 0.06; bBot = Math.min(H - 6 * dpr, gy + H * 0.34);
+      bL = W * 0.05; bTop = gy + A * 0.5 + 8 * dpr; bBot = Math.min(H - 8 * dpr, bTop + H * 0.24);
     }
     function groundY(x) { var u = x < xH ? 0 : (x - xH) / (W - xH); return gy + slope * A * (u - 0.5); }
     function roofY(x) { var mid = xH * 0.5; return x <= mid ? wallTop - (peakY - wallTop) * -1 * (x / mid) : peakY + (wallTop - peakY) * ((x - mid) / (xH + 10 * dpr - mid)); }
-    function poolLevel() { return Math.min(A * 0.55, Math.sqrt(Math.max(0, pool)) * 1.6 * dpr); }
+    function poolLevel() { return Math.min(A * 0.42, Math.sqrt(Math.max(0, pool)) * 1.6 * dpr); }
     function poolEdge(Ly) { var x = xH; while (x < W && groundY(x) > Ly) x += 3; return x; }
     function spawn(n) {
       for (var i = 0; i < n && drops.length < 420; i++) drops.push({ x: Math.random() * W, y: -Math.random() * H * 0.3, v: (900 + Math.random() * 500) * dpr / 1.5 });
@@ -303,8 +303,8 @@
       for (var k = sparks.length - 1; k >= 0; k--) { var s = sparks[k]; s.life -= dt; s.vy += 900 * dpr * dt; s.x += s.vx * dt; s.y += s.vy * dt; if (s.life <= 0) sparks.splice(k, 1); }
       if (slope > 0.12) pool = Math.max(0, pool - dt * (60 + pool * 0.6)); else pool = Math.max(0, pool - dt * 4);
       pool = Math.min(pool, 900);
-      if (pool > 20) { base = Math.min(1, base + dt * pool * 0.00012); if (Math.random() < dt * 6) drips.push({ x: xH - 6 * dpr - Math.random() * 4 * dpr, y: bTop + 6 * dpr, vy: 0 }); }
-      else base = Math.max(0, base - dt * 0.05);
+      if (pool > 20 && slope < 0.12) { base = Math.min(1, base + dt * pool * 0.00006); if (Math.random() < dt * 6) drips.push({ x: xH - 6 * dpr - Math.random() * 4 * dpr, y: bTop + 6 * dpr, vy: 0 }); }
+      else base = Math.max(0, base - dt * (slope > 0.12 ? 0.22 : 0.04));
       for (var m = drips.length - 1; m >= 0; m--) { var q = drips[m]; q.vy += 700 * dpr * dt; q.y += q.vy * dt; if (q.y > bBot - (bBot - bTop) * 0.6 * base - 2) drips.splice(m, 1); }
       setStatus();
     }
@@ -329,11 +329,12 @@
       c.fillStyle = "rgba(220,225,220,.55)"; c.font = "700 " + Math.round(11 * dpr) + "px Poppins, sans-serif"; c.textAlign = "center";
       c.fillText(RL.basement, (bL + xH) / 2, bTop + 20 * dpr);
       /* house */
-      c.fillStyle = "#233229"; c.fillRect(bL - 6 * dpr, wallTop, xH - bL + 6 * dpr, groundY(xH) - wallTop + 2);
+      c.fillStyle = "#6f726f"; c.fillRect(bL - 6 * dpr, groundY(xH) - 6 * dpr, xH - bL + 6 * dpr, bTop - groundY(xH) + 6 * dpr);
+      c.fillStyle = "#2c3d33"; c.fillRect(bL - 6 * dpr, wallTop, xH - bL + 6 * dpr, groundY(xH) - wallTop - 4 * dpr);
       c.strokeStyle = "rgba(255,255,255,.05)"; c.lineWidth = 1 * dpr; for (var yy = wallTop + 10 * dpr; yy < groundY(xH); yy += 10 * dpr) { c.beginPath(); c.moveTo(bL - 6 * dpr, yy); c.lineTo(xH, yy); c.stroke(); }
       var winW = (xH - bL) * 0.26, winH = (gy - wallTop) * 0.34, wx = bL + (xH - bL) * 0.18, wy = wallTop + (gy - wallTop) * 0.22;
       c.fillStyle = "#f2c66d"; c.globalAlpha = .85; c.fillRect(wx, wy, winW, winH); c.fillRect(wx + winW * 1.6, wy, winW, winH); c.globalAlpha = 1;
-      c.fillStyle = "#16201b"; c.beginPath(); c.moveTo(bL - 16 * dpr, wallTop); c.lineTo(xH * 0.5, peakY); c.lineTo(xH + 10 * dpr, wallTop); c.closePath(); c.fill();
+      c.fillStyle = "#4a3b34"; c.beginPath(); c.moveTo(bL - 16 * dpr, wallTop); c.lineTo(xH * 0.5, peakY); c.lineTo(xH + 10 * dpr, wallTop); c.closePath(); c.fill();
       c.fillStyle = "#5d635e"; c.fillRect(xH, wallTop, 5 * dpr, groundY(xH) - wallTop - 4 * dpr);
       c.fillStyle = "rgba(220,225,220,.6)"; c.fillText(RL.house, (bL + xH) / 2, wallTop + (gy - wallTop) * 0.8);
       c.textAlign = "left"; c.font = "600 " + Math.round(10 * dpr) + "px Poppins, sans-serif"; c.fillText(RL.spout, xH + 9 * dpr, wallTop + 14 * dpr);
@@ -351,7 +352,7 @@
       c.fillStyle = "rgba(190,220,245,.9)";
       for (var k = 0; k < sparks.length; k++) c.fillRect(sparks[k].x, sparks[k].y, 1.6 * dpr, 1.6 * dpr);
       c.textAlign = "right"; c.fillStyle = "rgba(220,225,220,.6)"; c.font = "700 " + Math.round(11 * dpr) + "px Poppins, sans-serif";
-      c.fillText(RL.street, W - 12 * dpr, Math.min(H - 10 * dpr, groundY(W) + 22 * dpr));
+      c.fillText(RL.street, W - 12 * dpr, H - 14 * dpr);
     }
     function loop(ts) {
       var dt = Math.min(0.05, (ts - (last || ts)) / 1000); last = ts;
