@@ -454,3 +454,5 @@ footer{background:var(--ink);border-top:1px solid var(--line)}
 .film-actions{display:flex;flex-wrap:wrap;gap:10px}
 .film.ended .film-replay{border-color:var(--green-hi)}
 @media (max-width:860px){.film-cap{min-height:0;font-size:24px}.chapters{flex-direction:row;flex-wrap:wrap}.chapters li{flex:1 1 calc(50% - 8px)}.chapters button{font-size:14px;padding:8px 12px}}
+@media (max-width:700px){.worker{pointer-events:none}}
+@media (max-width:860px){.film-side .film-cap{display:none}}

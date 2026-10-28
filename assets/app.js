@@ -424,8 +424,8 @@
   }
   /* ---- Site mascot: a crew member who walks along with the scroll ---- */
   (function () {
-    var LINES = ES ? { design: "Elija un patrón. Yo lo coloco.", base: "Primero la base. Siempre.", rain: "¿Pendiente mal? Saque el paraguas.", reviews: "¡59 reseñas y contando!", faq: "Pregúnteme lo que sea.", cta: "Tóqueme para un presupuesto gratis." }
-                   : { design: "Pick a pattern. I'll lay it.", base: "Base first. Always.", rain: "Wrong slope? Grab an umbrella.", reviews: "59 reviews and counting!", faq: "Ask me anything.", cta: "Tap me for a free estimate." };
+    var LINES = ES ? { design: "Elija un patrón. Yo lo coloco.", base: "Primero la base. Siempre.", rain: "¿Pendiente mal? Saque el paraguas.", reviews: "¡59 reseñas y contando!", faq: "Pregúnteme lo que sea.", cta: "¿Listo? Pida su presupuesto gratis." }
+                   : { design: "Pick a pattern. I'll lay it.", base: "Base first. Always.", rain: "Wrong slope? Grab an umbrella.", reviews: "59 reviews and counting!", faq: "Ask me anything.", cta: "Ready? Get your free estimate." };
     var TOOL = { design: "t-shovel", base: "t-shovel", rain: "t-umbrella", reviews: "t-clip", faq: "t-clip", cta: "t-clip" };
     var SVG = '<svg viewBox="0 -12 80 132" aria-hidden="true" focusable="false">' +
       '<ellipse cx="40" cy="113" rx="17" ry="3.5" fill="rgba(0,0,0,.35)"/>' +
